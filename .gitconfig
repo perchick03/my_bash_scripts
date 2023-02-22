@@ -1,0 +1,76 @@
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[alias]
+        st = status
+        stuno = status -uno
+        ci = commit
+        commitnow = "commit --amend --no-edit"
+        addu = add -u
+        co = checkout
+        br = branch
+        cp = cherry-pick
+        wt = worktree
+        blog = log --graph --oneline --pretty=format:'%Cred%h%Creset -%C(yellow)%s%Creset %C(green)<%an>%Creset'
+        aliases = "git config --get-regexp alias"
+        showfiles = "blog --name-only"
+        df = diff -b --no-prefix
+        dfo = diff -b --no-prefix origin/master
+        hist = history
+        type = cat-file -t
+        cat = type
+        staged = diff --name-only --staged
+        diffstaged = difftool -y -staged
+        find = !sh -c 'git ls-tree -r --name-only HEAD | grep -F $1'
+        stuno = status -uno
+	pullall = !git pull && git submodule update --init --recursive
+	resetall = !git reset --hard && git submodule foreach --recursive git reset --hard
+        # recent = !git for-each-ref --sort=-committerdate refs/heads --count=${GIT_RECENT_COUNT:=25} --format='
+        recent = !git for-each-ref --sort=-committerdate refs/heads --count=${GIT_RECENT_COUNT:=25} --format='%(HEAD)%(color:yellow)%(refname:short)|%(color:bold green)%(committerdate:relative)|%(color:blue)%(subject)|%(color:magenta)%(authorname)%(color:reset)' --color=always|column -ts'|'}
+        recentbr = !git reflog | grep -o 'checkout: moving from .* to ' |\
+                        sed -e 's/checkout: moving from //' -e 's/ to $//' | head -10
+        lola = log --graph --decorate --pretty=oneline --abbrev-commit
+        aliases = config --get-regexp alias
+        # parent = "!git show-branch | grep '*' | grep -v \"$(git rev-parse --abbrev-ref HEAD)\" | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/' | sed 's/[\\^~].*//' #"
+        rev = !git reset origin/master $@ && git checkout $@
+        find = !git blog --color -p --source --all --name-only -S 
+        
+        # based on: https://gist.github.com/intel352/9761288
+        show-closest-branch = rev-parse --abbrev-ref HEAD
+        # based on: http://stackoverflow.com/questions/3161204/find-the-parent-branch-of-a-git-branch
+        show-closest-parent-branch = !"git show-branch -a --no-color 2> /dev/null | awk -F '[]^~[]' -v current_branch=`git show-closest-branch 2> /dev/null || true` 'BEGIN { rc=1 ; if ( length( current_branch ) == 0 ) { exit } } ( ( index( $1, \"*\" ) > 0 ) && ( length( $2 ) > 0 ) && ( $2 != current_branch ) ) { print $2 ; rc=0 ; exit } END { exit rc }'"
+        # short versions
+        cb = !git show-closest-branch
+        parent = !git show-closest-parent-branch
+        lint = !git-lint $@
+        linediff=diff --shortstat master HEAD
+        backupbr=!git checkout -b `git rev-parse --abbrev-ref HEAD`_backup && git checkout -
+        # Show all the commits in the last 24 hours
+        daily = log --since '1 day ago' --oneline --author peretz@deepcube.com
+        # Removes the files from the worktree until you "unskip" them again
+        skip = update-index --skip-worktree 
+        # Adds the files again, so you can stage them
+        unskip = update-index --no-skip-worktree
+        # Lists all files that you skipped previously
+        list-skipped = ! git ls-files -v | grep ^S
+        push-no-ci = push -o ci.skip
+[help]
+	autocorrect = 5
+[core]
+	editor = vim
+
+
+[cola]
+	spellcheck = false
+[http]
+	sslverify = false
+[user]
+	name = perchick03
+	email = perchick03@gmail.com
+[credential]
+	helper = cache --timeout 7200
+[filter "tabspace"]
+	smudge = unexpand --tabs=4 --first-only
+	clean = expand --tabs=4 --initial
